@@ -17,7 +17,7 @@ int need_count; // 訪れる必要がある場所の数 探索の終了判定に
 
 void init_need_map() {
     need_map.resize(n, std::vector(n, (char) 0));
-    need_count = 0;
+    need_count = 1;
 
     std::stack<std::pair<int, int>> stack;
     stack.emplace(0, 0);
@@ -121,7 +121,7 @@ void read_graph() {
 // 全ての場所に到達可能か
 bool is_ok() {
     std::stack<std::pair<int, int>> stack;
-    std::vector<std::vector<char>> visited(n, std::vector(n, (char) 0))
+    std::vector<std::vector<char>> visited(n, std::vector(n, (char) 0));
     stack.emplace(0, 0);
     visited[0][0] = 1;
     int count = 1;
@@ -131,7 +131,7 @@ bool is_ok() {
         stack.pop();
 
         for (int i = 0; i < m; i++) {
-            if (!edge_map[y][x][i]) {
+            if (edge_map[y][x][i] == 0) {
                 continue;
             }
 
