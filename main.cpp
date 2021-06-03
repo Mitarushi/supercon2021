@@ -55,7 +55,7 @@ void read_graph() {
                     x++;
                     break;
                 default:
-                    throw std::invalid_argument("not int UDLR");
+                    throw std::invalid_argument("not in UDLR");
             }
 
             y_max = std::max(y, y_max);
