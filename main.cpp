@@ -90,7 +90,7 @@ void read_graph() {
             }
 
             y_max = std::max(y, y_max);
-            y_min = std::min(x, x_min);
+            y_min = std::min(y, y_min);
             x_max = std::max(x, x_max);
             x_min = std::min(x, x_min);
 
