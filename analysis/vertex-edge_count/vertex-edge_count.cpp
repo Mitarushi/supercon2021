@@ -16,5 +16,5 @@ int main() {
         }
     }
 
-    printf("v: %d, e: %d\n", v, e);
+    printf("v: %d, e: %d, e/v: %lf, e/m: %lf, v/(e/m): %lf\n", v, e, double(e) / v, double(e) / m, double(v) * m / e);
 }
