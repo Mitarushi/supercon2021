@@ -11,6 +11,7 @@ std::vector<std::vector<char>> obstacle_map; // obstacle_map[y][x] := 座標(y,x
 int m;
 std::vector<std::pair<int, int>> operation_shift; // operation[i] := i番目の操作をした時、どれだけ動くか(y,x)
 std::vector<std::vector<std::vector<char>>> edge_map; // edge_map[y][x][i] := 座標(y,x)で操作iが使えるか
+std::vector<std::vector<std::pair<int, int>>> op_edge_list; // op_edge_list[i][j] := 操作iが使える座標
 std::vector<std::vector<char>> need_map; // need_map[y][x] := 座標(y,x)に到達する必要があるか
 int need_count; // 訪れる必要がある場所の数 探索の終了判定に
 
@@ -59,6 +60,7 @@ void read_graph() {
     std::cin >> m;
     operation_shift.clear();
     edge_map.resize(n, std::vector(n, std::vector(m, (char) 1)));
+    op_edge_list.resize(m);
 
     for (const auto&[py, px] : obstacle) {
         for (int i = 0; i < m; i++) {
@@ -112,9 +114,41 @@ void read_graph() {
                 }
             }
         }
+
+        for (int py = 0; py < n; py++) {
+            for (int px = 0; px < n; px++) {
+                if (edge_map[py][px][i] == 1) {
+                    op_edge_list[i].emplace_back(py, px);
+                }
+            }
+        }
     }
 
     init_need_map();
+}
+
+std::vector<std::vector<std::vector<int>>> get_edge_list() {
+    std::vector<std::vector<std::vector<int>>> edge_list(n, std::vector(n, std::vector<int>()));
+
+    for (int i = 0; i < m; i++) {
+        for (const auto &[py, px] : op_edge_list[i]) {
+            edge_list[py][px].push_back(i);
+        }
+    }
+
+    return edge_list;
+}
+
+std::vector<std::vector<std::vector<int>>> get_limited_edge_list(const std::vector<int> &use) {
+    std::vector<std::vector<std::vector<int>>> edge_list(n, std::vector(n, std::vector<int>()));
+
+    for (int i: use) {
+        for (const auto &[py, px] : op_edge_list[i]) {
+            edge_list[py][px].push_back(i);
+        }
+    }
+
+    return edge_list;
 }
 
 
@@ -122,6 +156,7 @@ void read_graph() {
 bool is_ok() {
     std::stack<std::pair<int, int>> stack;
     std::vector<std::vector<char>> visited(n, std::vector(n, (char) 0));
+    auto edge_list = std::move(get_edge_list());
     stack.emplace(0, 0);
     visited[0][0] = 1;
     int count = 1;
@@ -130,11 +165,7 @@ bool is_ok() {
         auto[y, x] = stack.top();
         stack.pop();
 
-        for (int i = 0; i < m; i++) {
-            if (edge_map[y][x][i] == 0) {
-                continue;
-            }
-
+        for (int i : edge_list[y][x]) {
             int ny = y + operation_shift[i].first, nx = x + operation_shift[i].second;
             if (visited[ny][nx] == 0) {
                 stack.emplace(ny, nx);
