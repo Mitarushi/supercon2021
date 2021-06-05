@@ -10,7 +10,7 @@ std::vector<std::pair<int, int>> obstacle; // obstacle[i] := i番目の障害物
 std::vector<std::vector<char>> obstacle_map; // obstacle_map[y][x] := 座標(y,x)に障害物があるか
 int m;
 std::vector<std::pair<int, int>> operation_shift; // operation[i] := i番目の操作をした時、どれだけ動くか(y,x)
-std::vector<std::vector<std::vector<char>>> edge_map; // edge_map[y][x][i] := 座標(y,x)で操作iが使えるか
+std::vector<std::vector<std::vector<char>>> edge_map; // edge_map[i][y][x] := 座標(y,x)で操作iが使えるか
 std::vector<std::vector<std::pair<int, int>>> op_edge_list; // op_edge_list[i][j] := 操作iが使える座標
 std::vector<std::vector<char>> need_map; // need_map[y][x] := 座標(y,x)に到達する必要があるか
 int need_count; // 訪れる必要がある場所の数 探索の終了判定に
@@ -59,12 +59,12 @@ void read_graph() {
 
     std::cin >> m;
     operation_shift.clear();
-    edge_map.resize(n, std::vector(n, std::vector(m, (char) 1)));
+    edge_map.resize(m, std::vector(n, std::vector(n, (char) 1)));
     op_edge_list.resize(m);
 
-    for (const auto&[py, px] : obstacle) {
-        for (int i = 0; i < m; i++) {
-            edge_map[py][px][i] = 0;
+    for (int i = 0; i < m; i++) {
+        for (const auto&[py, px] : obstacle) {
+            edge_map[i][py][px] = 0;
         }
     }
 
@@ -99,7 +99,7 @@ void read_graph() {
             for (const auto&[py, px] : obstacle) {
                 int qy = py - y, qx = px - x;
                 if (0 <= qy && qy < n && 0 <= qx && qx < n) {
-                    edge_map[qy][qx][i] = 0;
+                    edge_map[i][qy][qx] = 0;
                 }
             }
         }
@@ -110,14 +110,14 @@ void read_graph() {
             for (int px = 0; px < n; px++) {
                 if (py + y_min < 0 || py + y_max >= n || px + x_min < 0 ||
                     px + x_max >= n) {
-                    edge_map[py][px][i] = 0;
+                    edge_map[i][py][px] = 0;
                 }
             }
         }
 
         for (int py = 0; py < n; py++) {
             for (int px = 0; px < n; px++) {
-                if (edge_map[py][px][i] == 1) {
+                if (edge_map[i][py][px] == 1) {
                     op_edge_list[i].emplace_back(py, px);
                 }
             }
