@@ -1,4 +1,4 @@
-// バグると嫌なので、bits/stdc++.h や using namespace std などは使わない方針で
+// バグると嫌なので、bits/stdc++.h や using namespace std などは使わない方針で!
 #include <iostream>
 #include <string>
 #include <vector>
