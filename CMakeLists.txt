@@ -8,3 +8,4 @@ add_executable(supercon2021
 
 add_executable(sample_yesno test/sample_yesno.cpp)
 add_executable(vertex-edge_count analysis/vertex-edge_count/vertex-edge_count.cpp)
+add_executable(greedy_check test/greedy_check.cpp)

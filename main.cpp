@@ -15,6 +15,16 @@ std::vector<std::vector<std::pair<int, int>>> op_edge_list; // op_edge_list[i][j
 std::vector<std::vector<char>> need_map; // need_map[y][x] := 座標(y,x)に到達する必要があるか
 int need_count; // 訪れる必要がある場所の数 探索の終了判定に
 
+unsigned int xor128() {
+    static unsigned int x = 123456789, y = 362436069, z = 521288629, w = 88675123;
+    unsigned int t;
+    t = (x ^ (x << 11));
+    x = y;
+    y = z;
+    z = w;
+    return (w = (w ^ (w >> 19)) ^ (t ^ (t >> 8)));
+}
+
 
 void init_need_map() {
     need_map.resize(n, std::vector(n, (char) 0));
@@ -177,3 +187,29 @@ bool is_ok() {
 
     return count == need_count;
 }
+
+int reach_count(std::vector<int> &use) {
+    std::stack<std::pair<int, int>> stack;
+    std::vector<std::vector<char>> visited(n, std::vector(n, (char) 0));
+    auto edge_list = std::move(get_limited_edge_list(use));
+    stack.emplace(0, 0);
+    visited[0][0] = 1;
+    int count = 1;
+
+    while (!stack.empty()) {
+        auto[y, x] = stack.top();
+        stack.pop();
+
+        for (int i : edge_list[y][x]) {
+            int ny = y + operation_shift[i].first, nx = x + operation_shift[i].second;
+            if (visited[ny][nx] == 0) {
+                stack.emplace(ny, nx);
+                visited[ny][nx] = 1;
+                count++;
+            }
+        }
+    }
+
+    return count;
+}
+
