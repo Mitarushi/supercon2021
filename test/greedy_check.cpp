@@ -1,5 +1,15 @@
 #include "../main.cpp"
 
+int predict(int next_use, std::vector<std::vector<char>> &visited) {
+    auto[dy, dx] = operation_shift[next_use];
+
+    int count = 0;
+    for (auto&[y, x]:op_edge_list[next_use]) {
+        count += (visited[y][x] == 1) && (visited[y + dy][x + dx] == 0);
+    }
+    return count;
+}
+
 int main() {
     read_graph();
 
@@ -10,20 +20,16 @@ int main() {
     int cnt = 0;
     while (true) {
         int max_i, max = 0;
-        std::vector<std::vector<char>> max_visited;
-        for (int rnd = 0; rnd < 20; rnd++) {
-            int i = int(xor128() % m);
-
-            auto[result, visited_tmp] = std::move(reach_count(visited, use, i));
+        for (int i = 0; i < m; i++) {
+            int result = predict(i, visited);
 
             if (result > max) {
                 max_i = i;
                 max = result;
-                max_visited = std::move(visited_tmp);
             }
         }
         use.push_back(max_i);
-        visited = std::move(max_visited);
+        std::tie(max, visited) = std::move(reach_count(visited, use, max_i));
         cnt++;
         printf("cnt: %d, idx: %d,  count: %d, need: %d\n", cnt, max_i, max, need_count);
         fflush(stdout);
