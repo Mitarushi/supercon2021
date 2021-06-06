@@ -5,5 +5,3 @@
 # Team member
 
 karudano, Mitarushi, Mitsubachi!
-
-(! の追加 2021/06/05 23:16)
