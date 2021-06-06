@@ -193,24 +193,11 @@ std::tuple<int, std::vector<std::vector<char>>>
 reach_count(std::vector<std::vector<char>> &prev_visited, std::vector<int> &use, int next_use) {
     std::stack<std::pair<int, int>> stack;
     std::vector<std::vector<char>> visited = prev_visited;
-    std::vector<std::vector<std::vector<int>>> edge_list(n, std::vector(n, std::vector<int>()));
     int count = 0;
-
-    for (const auto &i : use) {
-        for (int y = 0; y < n; y++) {
-            for (int x = 0; x < n; x++) {
-                if (edge_map[i][y][x] == 1 && need_map[y][x] == 1 && prev_visited[y][x] == 0) {
-                    edge_list[y][x].push_back(i);
-                }
-            }
-        }
-    }
 
     for (int y = 0; y < n; y++) {
         for (int x = 0; x < n; x++) {
             if (edge_map[next_use][y][x] == 1) {
-                edge_list[y][x].push_back(next_use);
-
                 if (prev_visited[y][x] == 1) {
                     stack.emplace(y, x);
                 }
@@ -219,12 +206,17 @@ reach_count(std::vector<std::vector<char>> &prev_visited, std::vector<int> &use,
             count += prev_visited[y][x];
         }
     }
+    use.push_back(next_use);
 
     while (!stack.empty()) {
         auto[y, x] = stack.top();
         stack.pop();
 
-        for (int i : edge_list[y][x]) {
+        for (int i : use) {
+            if (edge_map[i][y][x] == 0) {
+                continue;
+            }
+
             int ny = y + operation_shift[i].first, nx = x + operation_shift[i].second;
             if (visited[ny][nx] == 0) {
                 stack.emplace(ny, nx);
@@ -233,6 +225,7 @@ reach_count(std::vector<std::vector<char>> &prev_visited, std::vector<int> &use,
             }
         }
     }
+    use.pop_back();
 
     return std::forward_as_tuple(count, visited);
 }

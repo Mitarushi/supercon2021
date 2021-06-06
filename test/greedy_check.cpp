@@ -11,7 +11,7 @@ int main() {
     while (true) {
         int max_i, max = 0;
         std::vector<std::vector<char>> max_visited;
-        for (int rnd = 0; rnd < 100; rnd++) {
+        for (int rnd = 0; rnd < 20; rnd++) {
             int i = int(xor128() % m);
 
             auto[result, visited_tmp] = std::move(reach_count(visited, use, i));
