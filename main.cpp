@@ -4,6 +4,7 @@
 #include <vector>
 #include <stack>
 #include <array>
+#include <algorithm>
 
 int n;
 std::vector<std::pair<int, int>> obstacle; // obstacle[i] := i番目の障害物の座礁(y,x)
@@ -188,13 +189,36 @@ bool is_ok() {
     return count == need_count;
 }
 
-int reach_count(std::vector<int> &use) {
+std::tuple<int, std::vector<std::vector<char>>>
+reach_count(std::vector<std::vector<char>> &prev_visited, std::vector<int> &use, int next_use) {
     std::stack<std::pair<int, int>> stack;
-    std::vector<std::vector<char>> visited(n, std::vector(n, (char) 0));
-    auto edge_list = std::move(get_limited_edge_list(use));
-    stack.emplace(0, 0);
-    visited[0][0] = 1;
-    int count = 1;
+    std::vector<std::vector<char>> visited = prev_visited;
+    std::vector<std::vector<std::vector<int>>> edge_list(n, std::vector(n, std::vector<int>()));
+    int count = 0;
+
+    for (const auto &i : use) {
+        for (int y = 0; y < n; y++) {
+            for (int x = 0; x < n; x++) {
+                if (edge_map[i][y][x] == 1 && need_map[y][x] == 1 && prev_visited[y][x] == 0) {
+                    edge_list[y][x].push_back(i);
+                }
+            }
+        }
+    }
+
+    for (int y = 0; y < n; y++) {
+        for (int x = 0; x < n; x++) {
+            if (edge_map[next_use][y][x] == 1) {
+                edge_list[y][x].push_back(next_use);
+
+                if (prev_visited[y][x] == 1) {
+                    stack.emplace(y, x);
+                }
+            }
+
+            count += prev_visited[y][x];
+        }
+    }
 
     while (!stack.empty()) {
         auto[y, x] = stack.top();
@@ -210,6 +234,6 @@ int reach_count(std::vector<int> &use) {
         }
     }
 
-    return count;
+    return std::forward_as_tuple(count, visited);
 }
 
