@@ -13,6 +13,12 @@ int predict(int next_use, std::vector<std::vector<char>> &visited) {
 int main() {
     read_graph();
 
+    if (!is_ok()) {
+        printf("NO\n");
+        return 0;
+    }
+    printf("YES\n");
+
     std::vector<int> use;
     std::vector<std::vector<char>> visited(n, std::vector(n, (char) 0));
     visited[0][0] = 1;
@@ -31,11 +37,16 @@ int main() {
         use.push_back(max_i);
         std::tie(max, visited) = std::move(reach_count(visited, use, max_i));
         cnt++;
-        printf("cnt: %d, idx: %d,  count: %d, need: %d\n", cnt, max_i, max, need_count);
-        fflush(stdout);
+        // printf("cnt: %d, idx: %d,  count: %d, need: %d\n", cnt, max_i, max, need_count);
+        // fflush(stdout);
 
         if (max == need_count) {
             break;
         }
+    }
+
+    printf("%d\n", cnt);
+    for (auto &&i : use) {
+        printf("%d\n", i);
     }
 }
