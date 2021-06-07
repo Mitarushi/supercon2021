@@ -5,6 +5,7 @@
 #include <stack>
 #include <array>
 #include <algorithm>
+#include <tuple>
 
 int n;
 std::vector<std::pair<int, int>> obstacle; // obstacle[i] := i番目の障害物の座礁(y,x)
