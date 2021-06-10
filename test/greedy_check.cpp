@@ -34,7 +34,7 @@ int main() {
                 max = result;
             }
         }
-        use.push_back(max_i);
+        use.push_back(max_i + 1);
         std::tie(max, visited) = std::move(reach_count(visited, use, max_i));
         cnt++;
         // printf("cnt: %d, idx: %d,  count: %d, need: %d\n", cnt, max_i, max, need_count);
