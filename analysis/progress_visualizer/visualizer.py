@@ -15,7 +15,8 @@ parser.add_argument("input_file", help="入力のファイル")
 
 args = parser.parse_args()
 
-output = subprocess.run(f"{args.executable_flie} < {args.input_file}", shell=True, stdout=subprocess.PIPE).stdout.decode()
+output = subprocess.run(f"{args.executable_flie} < {args.input_file}", shell=True,
+                        stdout=subprocess.PIPE).stdout.decode()
 print(output)
 output_line = output.split("\n")
 if output_line[0] == "NO":
@@ -29,55 +30,95 @@ with open(args.input_file) as f:
 
     n = int(next(lines))
     obstacles = []
-    obstacle_map = [[False] * n for _ in range(n)]
     for _ in range(n):
         y, x = map(int, next(lines).split(" "))
         obstacles.append((y - 1, x - 1))
-        obstacle_map[y-1][x-1] = True
-    
+
     m = int(next(lines))
     ops = []
     for _ in range(m):
         s = next(lines)
         ops.append(s)
 
-def rachable_map(use):
-    visited = [[0] * n for _ in range(n)]
-    visited[0][0] = 1
+edge_map = [[[True] * n for _ in range(n)] for _ in range(k)]
+for y, x in obstacles:
+    for i in range(k):
+        edge_map[i][y][x] = False
+
+op_shift = []
+for idx, i in enumerate(use_ops):
+    op = ops[i]
+
+    shift_y, shift_x = 0, 0
+    min_y, min_x, max_y, max_x = 0, 0, 0, 0
+    for j in op:
+        if j == "U":
+            shift_y -= 1
+        elif j == "D":
+            shift_y += 1
+        elif j == "L":
+            shift_x -= 1
+        elif j == "R":
+            shift_x += 1
+
+        min_y, _, max_y = sorted([min_y, shift_y, max_y])
+        min_x, _, max_x = sorted([min_x, shift_x, max_x])
+
+        for y, x in obstacles:
+            py, px = y - shift_y, x - shift_x
+            if 0 <= py < n and 0 <= px < n:
+                edge_map[idx][py][px] = False
+
+    op_shift.append((shift_y, shift_x))
+    for y in range(n):
+        for x in range(n):
+            if not (-min_y <= y < n - max_y and -min_x <= x < n - max_x):
+                edge_map[idx][y][x] = False
+
+
+def get_reachable_map(use):
+    visited = [[False] * n for _ in range(n)]
+    visited[0][0] = True
     que = [(0, 0)]
 
     for y, x in que:
-        for op_ids in use:
-            y2, x2 = y, x
-            flag = True
-            for i in ops[op_ids]:
-                if i == "U":
-                    y2 -= 1
-                elif i == "D":
-                    y2 += 1
-                elif i == "L":
-                    x2 -= 1
-                elif i == "R":
-                    x2 += 1
-                
-                if not (0 <= y2 < n and 0 <= x2 < n and (not obstacle_map[y2][x2])):
-                    flag = False
-                    break
-            
-            if flag and not visited[y2][x2]:
-                visited[y2][x2] = True
-                que.append((y2, x2))
+        for op_idx in use:
+            if edge_map[op_idx][y][x]:
+                dy, dx = op_shift[op_idx]
+                py, px = y + dy, x + dx
+                if not visited[py][px]:
+                    visited[py][px] = True
+                    que.append((py, px))
 
     return visited
 
 
+def plot(canvas, use):
+    grid_xy = [512 * i // n for i in range(n)] + [512]
+    reachable_map = get_reachable_map(use)
+
+    for y in range(n):
+        for x in range(n):
+            if reachable_map[y][x]:
+                canvas.create_rectangle(grid_xy[y], grid_xy[x],
+                                        grid_xy[y + 1], grid_xy[x + 1],
+                                        fill="green")
+
+
 root = tkinter.Tk()
+root.geometry("512x544")
 
 canvas = tkinter.Canvas(root, width=512, height=512)
-canvas.pack()
+canvas.place(x=0, y=32)
+plot(canvas, range(k))
 
 scale = tkinter.Scale(
-    root, 
+    root,
+    orient="h",
+    from_=0,
+    to_=len(use_ops),
+    length=512 - 128
 )
+scale.place(x=64, y=0)
 
 root.mainloop()

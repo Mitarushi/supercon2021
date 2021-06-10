@@ -26,7 +26,8 @@ int main() {
     int cnt = 0;
     while (true) {
         int max_i, max = 0;
-        for (int i = 0; i < m; i++) {
+        for (int j = 0; j < m; j++) {
+            int i = xor128() % m;
             int result = predict(i, visited);
 
             if (result > max) {
