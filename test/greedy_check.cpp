@@ -46,7 +46,5 @@ int main() {
     }
 
     printf("%d\n", cnt);
-    for (auto &&i : use) {
-        printf("%d\n", i);
-    }
+    line_print(use);
 }

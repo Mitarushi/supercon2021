@@ -55,6 +55,17 @@ void init_need_map() {
     }
 }
 
+template<typename T>
+void line_print(std::vector<T>& args){
+    for (int i = 0; i < args.size(); i++) {
+        if (i) {
+            printf(" ");
+        }
+        printf("%d", args[i]);
+    }
+    printf("\n");
+}
+
 void read_graph() {
     std::cin >> n;
     obstacle.clear();
