@@ -94,6 +94,7 @@ def get_reachable_map(use):
 
 
 def plot(canvas, use):
+    canvas.delete("all")
     grid_xy = [512 * i // n for i in range(n)] + [512]
     reachable_map = get_reachable_map(use)
 
@@ -102,14 +103,26 @@ def plot(canvas, use):
             if reachable_map[y][x]:
                 canvas.create_rectangle(grid_xy[y], grid_xy[x],
                                         grid_xy[y + 1], grid_xy[x + 1],
-                                        fill="green")
+                                        fill="green", outline="")
+
+    for y, x in obstacles:
+        canvas.create_rectangle(grid_xy[y], grid_xy[x],
+                                grid_xy[y + 1], grid_xy[x + 1],
+                                fill="red", outline="")
+
+
+def update(canvas):
+    def func(_):
+        plot(canvas, range(slider.get()))
+
+    return func
 
 
 root = tkinter.Tk()
-root.geometry("512x544")
-
+root.geometry("512x576")
+slider = tkinter.IntVar()
 canvas = tkinter.Canvas(root, width=512, height=512)
-canvas.place(x=0, y=32)
+canvas.place(x=0, y=64)
 plot(canvas, range(k))
 
 scale = tkinter.Scale(
@@ -117,7 +130,9 @@ scale = tkinter.Scale(
     orient="h",
     from_=0,
     to_=len(use_ops),
-    length=512 - 128
+    length=512 - 128,
+    variable=slider,
+    command=update(canvas)
 )
 scale.place(x=64, y=0)
 
