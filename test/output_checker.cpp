@@ -27,6 +27,30 @@ int main(){
   que.emplace(0,0);
 
   while(!que.empty()){
-    
+    auto[y,x]=que.front();
+    que.pop();
+
+    for(int opeope:gieee2){
+      if(edge_map[opeope][y][x]==1){
+        auto[move_y,move_x]=operation_shift[opeope];
+
+        if(syuturyoku[y+move_y][x+move_x]==-1){
+          que.emplace(y+move_y,x+move_x);
+          syuturyoku[y+move_y][x+move_x]=syuturyoku[y][x]+1;
+        }
+      }
+    }
+  }
+
+  for(int i=0;i<n;i++){
+    for(int j=0;j<n;j++){
+      if(obstacle_map[i][j]==1){
+        std::cout<<"#"<<" ";
+      }
+      else{
+        std::cout<<syuturyoku[i][j]<<" ";
+      }
+    }
+    std::cout<<std::endl;
   }
 }
