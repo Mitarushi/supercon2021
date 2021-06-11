@@ -56,7 +56,7 @@ void init_need_map() {
 }
 
 template<typename T>
-void line_print(std::vector<T>& args, T shift=0){
+void line_print(std::vector<T> &args, T shift = 0) {
     for (int i = 0; i < args.size(); i++) {
         if (i) {
             printf(" ");

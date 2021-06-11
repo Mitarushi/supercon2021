@@ -19,7 +19,7 @@ output = subprocess.run(f"{args.executable_flie} < {args.input_file}", shell=Tru
                         stdout=subprocess.PIPE).stdout.decode()
 print(output)
 output_line = output.split("\n")
-if output_line[0] == "NO":
+if output_line[0] == "NO\r":
     exit()
 
 k = int(output_line[1])
