@@ -38,7 +38,7 @@ int main() {
         
         std::tie(max, visited) = std::move(reach_count(visited, use, max_i));
         cnt++;
-        use.push_back(max_i + 1);
+        use.push_back(max_i);
         // printf("cnt: %d, idx: %d,  count: %d, need: %d\n", cnt, max_i, max, need_count);
         // fflush(stdout);
 
@@ -48,5 +48,5 @@ int main() {
     }
 
     printf("%d\n", cnt);
-    line_print(use);
+    line_print(use, 1);
 }
