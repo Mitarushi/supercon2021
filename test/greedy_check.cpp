@@ -25,7 +25,7 @@ int main() {
 
     int cnt = 0;
     while (true) {
-        int max_i, max = 0;
+        int max_i, max = -1;
         for (int i = 0; i < m; i++) {
             int result = predict(i, visited);
 

@@ -16,10 +16,10 @@ parser.add_argument("input_file", help="入力のファイル")
 args = parser.parse_args()
 
 output = subprocess.run(f"{args.executable_flie} < {args.input_file}", shell=True,
-                        stdout=subprocess.PIPE).stdout.decode()
+                        stdout=subprocess.PIPE).stdout.decode().replace("\r", "")
 print(output)
 output_line = output.split("\n")
-if output_line[0] == "NO\r":
+if output_line[0] == "NO":
     exit()
 
 k = int(output_line[1])
