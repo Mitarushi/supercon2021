@@ -101,13 +101,13 @@ def plot(canvas, use):
     for y in range(n):
         for x in range(n):
             if reachable_map[y][x]:
-                canvas.create_rectangle(grid_xy[y], grid_xy[x],
-                                        grid_xy[y + 1], grid_xy[x + 1],
+                canvas.create_rectangle(grid_xy[x], grid_xy[y],
+                                        grid_xy[x + 1], grid_xy[y + 1],
                                         fill="green", outline="")
 
     for y, x in obstacles:
-        canvas.create_rectangle(grid_xy[y], grid_xy[x],
-                                grid_xy[y + 1], grid_xy[x + 1],
+        canvas.create_rectangle(grid_xy[x], grid_xy[y],
+                                grid_xy[x + 1], grid_xy[y + 1],
                                 fill="red", outline="")
 
 
