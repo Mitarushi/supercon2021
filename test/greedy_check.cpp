@@ -60,7 +60,7 @@ int main() {
 
             for (int i = 0; i < m; i++) {
                 hash_t hash = prev_hash + zobrist[i];
-                if (beam_table.contains(hash)) {
+                if (beam_table.count(hash) == 1) {
                     continue;
                 }
 
