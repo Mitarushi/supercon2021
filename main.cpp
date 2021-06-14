@@ -151,7 +151,7 @@ void read_graph() {
 
     init_need_map();
 
-    edge_from_map.resize(m, std::vector(n, std::vector(n, (char) 1)));
+    edge_from_map.resize(m, std::vector(n, std::vector(n, (char) 0)));
     for (int i = 0; i < m; i++) {
         auto[dy, dx] = operation_shift[i];
         for (int j = 0; j < n; j++) {

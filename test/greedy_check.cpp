@@ -1,13 +1,84 @@
 #include "../main.cpp"
 
-int predict(int next_use, std::vector<std::vector<char>> &visited) {
-    auto[dy, dx] = operation_shift[next_use];
-
-    int count = 0;
-    for (auto&[y, x]:op_edge_list[next_use]) {
-        count += (visited[y][x] == 1) && (visited[y + dy][x + dx] == 0);
+template<typename T>
+void shuffle(std::vector<T> &a, int length) {
+    for (int i = 0; i < length; i++) {
+        int j = i + xor128() % (a.size() - i);
+        std::swap(a[i], a[j]);
     }
-    return count;
+}
+
+std::vector<int> predict(std::vector<std::vector<char>> &visited, int prev_count, std::vector<char> &hash_skip) {
+    std::vector<int> results(m, 0);
+    const int boarder = 3000;
+
+    if (prev_count < need_count / 5) {
+        std::vector<std::pair<int, int>> sample_point;
+
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (visited[i][j] == 1) {
+                    sample_point.emplace_back(i, j);
+                }
+            }
+        }
+
+        shuffle(sample_point, std::min(boarder, (int) sample_point.size()));
+        float scale = sample_point.size() > boarder ? float(sample_point.size()) / float(boarder) : 1.0f;
+
+        for (int i = 0; i < m; i++) {
+            if (hash_skip[i] == 1) {
+                continue;
+            }
+            auto[dy, dx] = operation_shift[i];
+            int s = 0;
+            for (auto[y, x] : sample_point) {
+                s += (edge_map[i][y][x] == 1) && (visited[y + dy][x + dx] == 0);
+            }
+
+            results[i] = int((float) s * scale);
+        }
+    } else if (prev_count > need_count * 4 / 5) {
+        std::vector<std::pair<int, int>> sample_point;
+
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (visited[i][j] == 0 && need_map[i][j] == 1) {
+                    sample_point.emplace_back(i, j);
+                }
+            }
+        }
+
+        shuffle(sample_point, std::min(boarder, (int) sample_point.size()));
+        float scale = sample_point.size() > boarder ? float(sample_point.size()) / float(boarder) : 1.0f;
+
+        for (int i = 0; i < m; i++) {
+            if (hash_skip[i] == 1) {
+                continue;
+            }
+            auto[dy, dx] = operation_shift[i];
+            int s = 0;
+            for (auto[y, x] : sample_point) {
+                s += edge_from_map[i][y][x] && visited[y - dy][x - dx];
+            }
+
+            results[i] = int((float) s * scale);
+        }
+    } else {
+        for (int i = 0; i < m; i++) {
+            if (hash_skip[i] == 1) {
+                continue;
+            }
+            auto[dy, dx] = operation_shift[i];
+            int count = 0;
+            for (auto&[y, x]:op_edge_list[i]) {
+                count += (visited[y][x] == 1) && (visited[y + dy][x + dx] == 0);
+            }
+            results[i] = count;
+        }
+    }
+
+    return results;
 }
 
 using hash_t = unsigned int;
@@ -23,7 +94,7 @@ void init_hash() {
 hash_t vector_hash(std::vector<int> &use) {
     hash_t s = 0;
     for (const auto &i : use) {
-        s += zobrist[i];
+        s ^= zobrist[i];
     }
     return s;
 }
@@ -38,7 +109,7 @@ int main() {
     }
     printf("YES\n");
 
-    const int beam_width = 30;
+    const int beam_width = 70;
 
     std::vector<std::vector<int>> beam_use = {{}}, next_beam_use;
     std::vector<std::vector<std::vector<char>>> beam_visited = {std::vector(n, std::vector(n, (char) 0))},
@@ -58,15 +129,20 @@ int main() {
         for (int b = 0; b < beam_use.size(); b++) {
             hash_t prev_hash = vector_hash(beam_use[b]);
 
+            std::vector<char> hash_skip(m, 0);
             for (int i = 0; i < m; i++) {
-                hash_t hash = prev_hash + zobrist[i];
+                hash_t hash = prev_hash ^ zobrist[i];
                 if (beam_table.contains(hash)) {
-                    continue;
+                    hash_skip[i] = 1;
                 }
-
-                int result = predict(i, beam_visited[b]) + beam_count[b];
-                next.emplace_back(result, b, i);
                 beam_table.insert(hash);
+            }
+
+            std::vector<int> results = std::move(predict(beam_visited[b], beam_count[b], hash_skip));
+
+            for (int i = 0; i < m; i++) {
+                int result = results[i] + beam_count[b];
+                next.emplace_back(result, b, i);
             }
         }
 
@@ -96,6 +172,7 @@ int main() {
         if (*max_element == need_count) {
             printf("%d\n", cnt);
             line_print(next_beam_use[max_element - next_beam_count.begin()], 1);
+            fflush(stdout);
             break;
         }
 
