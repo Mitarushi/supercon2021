@@ -10,8 +10,27 @@ int predict(int next_use, std::vector<std::vector<char>> &visited) {
     return count;
 }
 
+using hash_t = unsigned int;
+std::vector<hash_t> zobrist;
+
+void init_hash() {
+    zobrist.resize(m);
+    for (int i = 0; i < m; i++) {
+        zobrist[i] = xor128();
+    }
+}
+
+hash_t vector_hash(std::vector<int> &use) {
+    hash_t s = 0;
+    for (const auto &i : use) {
+        s += zobrist[i];
+    }
+    return s;
+}
+
 int main() {
     read_graph();
+    init_hash();
 
     if (!is_ok()) {
         printf("NO\n");
@@ -34,11 +53,20 @@ int main() {
         next_beam_visited.clear();
         next_beam_count.clear();
 
-        for (int b = 0; b < beam_use.size(); b++) {
-            for (int i = 0; i < m; i++) {
-                int result = predict(i, beam_visited[b]) + beam_count[b];
+        std::unordered_set<hash_t> beam_table;
 
+        for (int b = 0; b < beam_use.size(); b++) {
+            hash_t prev_hash = vector_hash(beam_use[b]);
+
+            for (int i = 0; i < m; i++) {
+                hash_t hash = prev_hash + zobrist[i];
+                if (beam_table.contains(hash)) {
+                    continue;
+                }
+
+                int result = predict(i, beam_visited[b]) + beam_count[b];
                 next.emplace_back(result, b, i);
+                beam_table.insert(hash);
             }
         }
 
