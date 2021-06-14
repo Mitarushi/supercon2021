@@ -13,6 +13,7 @@ std::vector<std::vector<char>> obstacle_map; // obstacle_map[y][x] := 座標(y,x
 int m;
 std::vector<std::pair<int, int>> operation_shift; // operation[i] := i番目の操作をした時、どれだけ動くか(y,x)
 std::vector<std::vector<std::vector<char>>> edge_map; // edge_map[i][y][x] := 座標(y,x)で操作iが使えるか
+std::vector<std::vector<std::vector<char>>> edge_from_map; // edge_map[i][y][x] := 座標(y,x)に操作iで行けるか
 std::vector<std::vector<std::pair<int, int>>> op_edge_list; // op_edge_list[i][j] := 操作iが使える座標
 std::vector<std::vector<char>> need_map; // need_map[y][x] := 座標(y,x)に到達する必要があるか
 int need_count; // 訪れる必要がある場所の数 探索の終了判定に
@@ -148,6 +149,18 @@ void read_graph() {
     }
 
     init_need_map();
+
+    edge_from_map.resize(m, std::vector(n, std::vector(n, (char) 1)));
+    for (int i = 0; i < m; i++) {
+        auto[dy, dx] = operation_shift[i];
+        for (int j = 0; j < n; j++) {
+            for (int k = 0; k < n; k++) {
+                if (edge_map[i][j][k] == 1) {
+                    edge_from_map[i][j + dy][k + dx] = 1;
+                }
+            }
+        }
+    }
 }
 
 std::vector<std::vector<std::vector<int>>> get_edge_list() {
