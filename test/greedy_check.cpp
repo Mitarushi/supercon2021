@@ -12,7 +12,7 @@ std::vector<int> predict(std::vector<std::vector<char>> &visited, int prev_count
     std::vector<int> results(m, 0);
     const int boarder = 3000;
 
-    if (prev_count < need_count / 5) {
+    if (prev_count < need_count / 3) {
         std::vector<std::pair<int, int>> sample_point;
 
         for (int i = 0; i < n; i++) {
@@ -38,7 +38,7 @@ std::vector<int> predict(std::vector<std::vector<char>> &visited, int prev_count
 
             results[i] = int((float) s * scale);
         }
-    } else if (prev_count > need_count * 4 / 5) {
+    } else if (prev_count > need_count * 5 / 6) {
         std::vector<std::pair<int, int>> sample_point;
 
         for (int i = 0; i < n; i++) {
@@ -99,6 +99,31 @@ hash_t vector_hash(std::vector<int> &use) {
     return s;
 }
 
+void first_greedy() {
+    std::vector<int> use;
+    std::vector<std::vector<char>> visited(n, std::vector(n, (char) 0));
+    visited[0][0] = 1;
+
+    std::vector<char> hash_skip(m, 0);
+
+    int cnt = 0, visited_count = 1;
+    while (true) {
+        std::vector<int> results = std::move(predict(visited, visited_count, hash_skip));
+        int max_i = int(std::max_element(results.begin(), results.end()) - results.begin());
+
+        std::tie(visited_count, visited) = std::move(reach_count(visited, use, max_i));
+        cnt++;
+        use.push_back(max_i);
+        if (visited_count == need_count) {
+            break;
+        }
+    }
+
+    printf("YES\n");
+    printf("%d\n", cnt);
+    line_print(use, 1);
+}
+
 int main() {
     read_graph();
     init_hash();
@@ -107,7 +132,7 @@ int main() {
         printf("NO\n");
         return 0;
     }
-    printf("YES\n");
+    first_greedy();
 
     const int beam_width = 70;
 
@@ -166,10 +191,11 @@ int main() {
 
         auto max_element = std::max_element(next_beam_count.begin(), next_beam_count.end());
 
-//        printf("cnt: %d, count: %d, need: %d\n", cnt, *max_element, need_count);
-//        fflush(stdout);
+        printf("cnt: %d, count: %d, need: %d\n", cnt, *max_element, need_count);
+        fflush(stdout);
 
         if (*max_element == need_count) {
+            printf("YES\n");
             printf("%d\n", cnt);
             line_print(next_beam_use[max_element - next_beam_count.begin()], 1);
             fflush(stdout);
