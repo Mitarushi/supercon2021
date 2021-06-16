@@ -19,8 +19,12 @@ cnt = 0
 for f in os.listdir(args.input_file):
     output = subprocess.run(f"{args.executable_flie} < {os.path.join(args.input_file, f)}"
                             , shell=True, stdout=subprocess.PIPE).stdout.decode().replace("\r", "")
-    print(f, output)
+    
     output_line = output.split("\n")
+    while len(output_line) >= 6:
+        for _ in range(3):
+            output_line.pop(0)
+    print(f, "\n".join(output_line))
 
     if output_line[0] == "NO":
         continue

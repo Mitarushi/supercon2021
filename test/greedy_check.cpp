@@ -191,8 +191,8 @@ int main() {
 
         auto max_element = std::max_element(next_beam_count.begin(), next_beam_count.end());
 
-        printf("cnt: %d, count: %d, need: %d\n", cnt, *max_element, need_count);
-        fflush(stdout);
+        // printf("cnt: %d, count: %d, need: %d\n", cnt, *max_element, need_count);
+        // fflush(stdout);
 
         if (*max_element == need_count) {
             printf("YES\n");
