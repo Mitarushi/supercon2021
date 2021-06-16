@@ -8,16 +8,20 @@
 #include <tuple>
 #include <unordered_set>
 #include <sys/time.h>
+#include <bitset>
+
+constexpr int n_max = 250;
+using board_bit = std::bitset<n_max * n_max>;
 
 int n;
 std::vector<std::pair<int, int>> obstacle; // obstacle[i] := i番目の障害物の座礁(y,x)
-std::vector<std::vector<char>> obstacle_map; // obstacle_map[y][x] := 座標(y,x)に障害物があるか
+board_bit obstacle_map; // obstacle_map[y][x] := 座標(y,x)に障害物があるか
 int m;
 std::vector<std::pair<int, int>> operation_shift; // operation[i] := i番目の操作をした時、どれだけ動くか(y,x)
-std::vector<std::vector<std::vector<char>>> edge_map; // edge_map[i][y][x] := 座標(y,x)で操作iが使えるか
-std::vector<std::vector<std::vector<char>>> edge_from_map; // edge_map[i][y][x] := 座標(y,x)に操作iで行けるか
+std::vector<board_bit> edge_map; // edge_map[i][y][x] := 座標(y,x)で操作iが使えるか
+std::vector<board_bit> edge_from_map; // edge_map[i][y][x] := 座標(y,x)に操作iで行けるか
 std::vector<std::vector<std::pair<int, int>>> op_edge_list; // op_edge_list[i][j] := 操作iが使える座標
-std::vector<std::vector<char>> need_map; // need_map[y][x] := 座標(y,x)に到達する必要があるか
+board_bit need_map; // need_map[y][x] := 座標(y,x)に到達する必要があるか
 int need_count; // 訪れる必要がある場所の数 探索の終了判定に
 
 unsigned int xor128() {
@@ -32,12 +36,11 @@ unsigned int xor128() {
 
 
 void init_need_map() {
-    need_map.resize(n, std::vector(n, (char) 0));
     need_count = 1;
 
     std::stack<std::pair<int, int>> stack;
     stack.emplace(0, 0);
-    need_map[0][0] = 1;
+    need_map.set(0);
 
     const std::array<int, 4>
             y_shift = {-1, 0, 1, 0},
@@ -49,8 +52,9 @@ void init_need_map() {
 
         for (int i = 0; i < 4; i++) {
             int ny = y + y_shift[i], nx = x + x_shift[i];
-            if (0 <= ny && ny < n && 0 <= nx && nx < n && need_map[ny][nx] == 0 && obstacle_map[ny][nx] == 0) {
-                need_map[ny][nx] = 1;
+            if (0 <= ny && ny < n && 0 <= nx && nx < n && !need_map[ny * n_max + nx] &&
+                !obstacle_map[ny * n_max + nx]) {
+                need_map.set(ny * n_max + nx);
                 stack.emplace(ny, nx);
                 need_count++;
             }
@@ -72,7 +76,6 @@ void line_print(std::vector<T> &args, T shift = 0) {
 void read_graph() {
     std::cin >> n;
     obstacle.clear();
-    obstacle_map.resize(n, std::vector(n, (char) 0));
 
     for (int i = 0; i < n; i++) {
         int y, x;
@@ -80,17 +83,20 @@ void read_graph() {
         y--;
         x--;
         obstacle.emplace_back(y, x);
-        obstacle_map[y][x] = 1;
+        obstacle_map.set(y * n_max + x);
     }
 
     std::cin >> m;
     operation_shift.clear();
-    edge_map.resize(m, std::vector(n, std::vector(n, (char) 1)));
+    edge_map.resize(m);
+    for (int i = 0; i < m; i++) {
+        edge_map[i].flip();
+    }
     op_edge_list.resize(m);
 
     for (int i = 0; i < m; i++) {
         for (const auto&[py, px] : obstacle) {
-            edge_map[i][py][px] = 0;
+            edge_map[i].reset(py * n_max + px);
         }
     }
 
@@ -125,7 +131,7 @@ void read_graph() {
             for (const auto&[py, px] : obstacle) {
                 int qy = py - y, qx = px - x;
                 if (0 <= qy && qy < n && 0 <= qx && qx < n) {
-                    edge_map[i][qy][qx] = 0;
+                    edge_map[i].reset(qy * n_max + qx);
                 }
             }
         }
@@ -136,14 +142,14 @@ void read_graph() {
             for (int px = 0; px < n; px++) {
                 if (py + y_min < 0 || py + y_max >= n || px + x_min < 0 ||
                     px + x_max >= n) {
-                    edge_map[i][py][px] = 0;
+                    edge_map[i].reset(py * n_max + px);
                 }
             }
         }
 
         for (int py = 0; py < n; py++) {
             for (int px = 0; px < n; px++) {
-                if (edge_map[i][py][px] == 1) {
+                if (edge_map[i][py * n_max + px]) {
                     op_edge_list[i].emplace_back(py, px);
                 }
             }
@@ -152,13 +158,13 @@ void read_graph() {
 
     init_need_map();
 
-    edge_from_map.resize(m, std::vector(n, std::vector(n, (char) 0)));
+    edge_from_map.resize(m);
     for (int i = 0; i < m; i++) {
         auto[dy, dx] = operation_shift[i];
         for (int j = 0; j < n; j++) {
             for (int k = 0; k < n; k++) {
-                if (edge_map[i][j][k] == 1) {
-                    edge_from_map[i][j + dy][k + dx] = 1;
+                if (edge_map[i][j * n_max + k]) {
+                    edge_from_map[i].set((j + dy) * n_max + k + dx);
                 }
             }
         }
@@ -193,10 +199,10 @@ std::vector<std::vector<std::vector<int>>> get_limited_edge_list(const std::vect
 // 全ての場所に到達可能か
 bool is_ok() {
     std::stack<std::pair<int, int>> stack;
-    std::vector<std::vector<char>> visited(n, std::vector(n, (char) 0));
+    board_bit visited;
     auto edge_list = std::move(get_edge_list());
     stack.emplace(0, 0);
-    visited[0][0] = 1;
+    visited.set(0);
     int count = 1;
 
     while (!stack.empty()) {
@@ -205,9 +211,9 @@ bool is_ok() {
 
         for (int i : edge_list[y][x]) {
             int ny = y + operation_shift[i].first, nx = x + operation_shift[i].second;
-            if (visited[ny][nx] == 0) {
+            if (!visited[ny * n_max + nx]) {
                 stack.emplace(ny, nx);
-                visited[ny][nx] = 1;
+                visited.set(ny * n_max + nx);
                 count++;
             }
         }
@@ -216,21 +222,21 @@ bool is_ok() {
     return count == need_count;
 }
 
-std::tuple<int, std::vector<std::vector<char>>>
-reach_count(std::vector<std::vector<char>> &prev_visited, std::vector<int> &use, int next_use) {
+std::tuple<int, board_bit>
+reach_count(board_bit &prev_visited, std::vector<int> &use, int next_use) {
     std::stack<std::pair<int, int>> stack;
-    std::vector<std::vector<char>> visited = prev_visited;
+    board_bit visited = prev_visited;
     int count = 0;
 
     for (int y = 0; y < n; y++) {
         for (int x = 0; x < n; x++) {
-            if (edge_map[next_use][y][x] == 1) {
-                if (prev_visited[y][x] == 1) {
+            if (edge_map[next_use][y * n_max + x]) {
+                if (prev_visited[y * n_max + x] == 1) {
                     stack.emplace(y, x);
                 }
             }
 
-            count += prev_visited[y][x];
+            count += prev_visited[y * n_max + x];
         }
     }
     use.push_back(next_use);
@@ -240,14 +246,14 @@ reach_count(std::vector<std::vector<char>> &prev_visited, std::vector<int> &use,
         stack.pop();
 
         for (int i : use) {
-            if (edge_map[i][y][x] == 0) {
+            if (!edge_map[i][y * n_max + x]) {
                 continue;
             }
 
             int ny = y + operation_shift[i].first, nx = x + operation_shift[i].second;
-            if (visited[ny][nx] == 0) {
+            if (!visited[ny * n_max + nx]) {
                 stack.emplace(ny, nx);
-                visited[ny][nx] = 1;
+                visited.set(ny * n_max + nx);
                 count++;
             }
         }
@@ -257,8 +263,6 @@ reach_count(std::vector<std::vector<char>> &prev_visited, std::vector<int> &use,
     return std::forward_as_tuple(count, visited);
 }
 
-#include "../main.cpp"
-
 template<typename T>
 void shuffle(std::vector<T> &a, int length) {
     for (int i = 0; i < length; i++) {
@@ -267,16 +271,18 @@ void shuffle(std::vector<T> &a, int length) {
     }
 }
 
-std::vector<int> predict(std::vector<std::vector<char>> &visited, int prev_count, std::vector<char> &hash_skip) {
+#include <cassert>
+
+std::vector<int> predict(board_bit &visited, int prev_count, std::vector<char> &hash_skip) {
     std::vector<int> results(m, 0);
     const int boarder = 3000;
 
-    if (prev_count < need_count / 3) {
+    if (prev_count < need_count / 4) {
         std::vector<std::pair<int, int>> sample_point;
 
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
-                if (visited[i][j] == 1) {
+                if (visited[i * n_max + j]) {
                     sample_point.emplace_back(i, j);
                 }
             }
@@ -292,17 +298,17 @@ std::vector<int> predict(std::vector<std::vector<char>> &visited, int prev_count
             auto[dy, dx] = operation_shift[i];
             int s = 0;
             for (auto[y, x] : sample_point) {
-                s += (edge_map[i][y][x] == 1) && (visited[y + dy][x + dx] == 0);
+                s += edge_map[i][y * n_max + x] && !visited[(y + dy) * n_max + x + dx];
             }
 
             results[i] = int((float) s * scale);
         }
-    } else if (prev_count > need_count * 4 / 5) {
+    } else if (prev_count > need_count * 19 / 20) {
         std::vector<std::pair<int, int>> sample_point;
 
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
-                if (visited[i][j] == 0 && need_map[i][j] == 1) {
+                if (!visited[i * n_max + j] && need_map[i * n_max + j]) {
                     sample_point.emplace_back(i, j);
                 }
             }
@@ -318,22 +324,27 @@ std::vector<int> predict(std::vector<std::vector<char>> &visited, int prev_count
             auto[dy, dx] = operation_shift[i];
             int s = 0;
             for (auto[y, x] : sample_point) {
-                s += edge_from_map[i][y][x] && visited[y - dy][x - dx];
+                s += edge_from_map[i][y * n_max + x] && visited[(y - dy) * n_max + x - dx];
             }
 
             results[i] = int((float) s * scale);
         }
     } else {
+        board_bit not_visited = ~visited;
         for (int i = 0; i < m; i++) {
             if (hash_skip[i] == 1) {
                 continue;
             }
             auto[dy, dx] = operation_shift[i];
-            int count = 0;
-            for (auto&[y, x]:op_edge_list[i]) {
-                count += (visited[y][x] == 1) && (visited[y + dy][x + dx] == 0);
+            int shift = dy * n_max + dx;
+            board_bit mask = (edge_map[i] & visited);
+            if (shift > 0) {
+                mask <<= shift;
+            } else {
+                mask >>= -shift;
             }
-            results[i] = count;
+            mask &= not_visited;
+            results[i] = int(mask.count());
         }
     }
 
@@ -360,8 +371,8 @@ hash_t vector_hash(std::vector<int> &use) {
 
 void first_greedy() {
     std::vector<int> use;
-    std::vector<std::vector<char>> visited(n, std::vector(n, (char) 0));
-    visited[0][0] = 1;
+    board_bit visited;
+    visited.set(0);
 
     std::vector<char> hash_skip(m, 0);
 
@@ -401,13 +412,13 @@ int main() {
     }
     first_greedy();
 
-    int beam_width = 80;
+    int beam_width = 128;
 
     std::vector<std::vector<int>> beam_use = {{}}, next_beam_use;
-    std::vector<std::vector<std::vector<char>>> beam_visited = {std::vector(n, std::vector(n, (char) 0))},
+    std::vector<board_bit> beam_visited = {board_bit()},
             next_beam_visited;
     std::vector<int> beam_count = {1}, next_beam_count;
-    beam_visited[0][0][0] = 1;
+    beam_visited[0].set(0);
 
     int cnt = 0;
     while (true) {
@@ -415,6 +426,14 @@ int main() {
         next_beam_use.clear();
         next_beam_visited.clear();
         next_beam_count.clear();
+
+//        if (beam_count[0] < need_count / 3) {
+//            printf("a\n");
+//        } else if (beam_count[0] > need_count * 19 / 20) {
+//            printf("c\n");
+//        } else {
+//            printf("b\n");
+//        }
 
         std::unordered_set<hash_t> beam_table;
 
@@ -458,8 +477,8 @@ int main() {
 
         auto max_element = std::max_element(next_beam_count.begin(), next_beam_count.end());
 
-        // printf("cnt: %d, count: %d, need: %d\n", cnt, *max_element, need_count);
-        // fflush(stdout);
+//        printf("cnt: %d, count: %d, need: %d\n", cnt, *max_element, need_count);
+//        fflush(stdout);
 
         if (*max_element == need_count) {
             printf("YES\n");
@@ -475,10 +494,8 @@ int main() {
 
         gettimeofday(&t2, NULL);
         double time = get_elapsed_time(&t1, &t2);
-        if (time > 8500.0) {
+        if (time > 9500.0) {
             beam_width = 10;
-        } else if (time > 9250.0) {
-            beam_width = 5;
         }
     }
 }
