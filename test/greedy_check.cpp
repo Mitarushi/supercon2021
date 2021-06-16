@@ -157,7 +157,7 @@ int main() {
             std::vector<char> hash_skip(m, 0);
             for (int i = 0; i < m; i++) {
                 hash_t hash = prev_hash ^ zobrist[i];
-                if (beam_table.contains(hash)) {
+                if (beam_table.count(hash) == 1) {
                     hash_skip[i] = 1;
                 }
                 beam_table.insert(hash);
