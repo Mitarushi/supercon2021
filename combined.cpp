@@ -257,8 +257,6 @@ reach_count(std::vector<std::vector<char>> &prev_visited, std::vector<int> &use,
     return std::forward_as_tuple(count, visited);
 }
 
-#include "../main.cpp"
-
 template<typename T>
 void shuffle(std::vector<T> &a, int length) {
     for (int i = 0; i < length; i++) {
