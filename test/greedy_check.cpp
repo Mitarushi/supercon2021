@@ -216,8 +216,10 @@ int main() {
 
         gettimeofday(&t2, NULL);
         double time = get_elapsed_time(&t1, &t2);
-        if (time > 9500.0) {
+        if (time > 8500.0) {
             beam_width = 10;
+        } else if (time > 9250.0) {
+            beam_width = 5;
         }
     }
 
