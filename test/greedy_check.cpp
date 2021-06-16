@@ -38,7 +38,7 @@ std::vector<int> predict(std::vector<std::vector<char>> &visited, int prev_count
 
             results[i] = int((float) s * scale);
         }
-    } else if (prev_count > need_count * 5 / 6) {
+    } else if (prev_count > need_count * 4 / 5) {
         std::vector<std::pair<int, int>> sample_point;
 
         for (int i = 0; i < n; i++) {
@@ -124,7 +124,15 @@ void first_greedy() {
     line_print(use, 1);
 }
 
+double get_elapsed_time(struct timeval *begin, struct timeval *end) {
+    return (end->tv_sec - begin->tv_sec) * 1000 +
+           (end->tv_usec - begin->tv_usec) / 1000.0;
+}
+
 int main() {
+    struct timeval t1, t2;
+    gettimeofday(&t1, NULL);
+
     read_graph();
     init_hash();
 
@@ -134,7 +142,7 @@ int main() {
     }
     first_greedy();
 
-    const int beam_width = 70;
+    int beam_width = 80;
 
     std::vector<std::vector<int>> beam_use = {{}}, next_beam_use;
     std::vector<std::vector<std::vector<char>>> beam_visited = {std::vector(n, std::vector(n, (char) 0))},
@@ -205,7 +213,12 @@ int main() {
         std::swap(beam_use, next_beam_use);
         std::swap(beam_visited, next_beam_visited);
         std::swap(beam_count, next_beam_count);
-    }
 
+        gettimeofday(&t2, NULL);
+        double time = get_elapsed_time(&t1, &t2);
+        if (time > 9500.0) {
+            beam_width = 10;
+        }
+    }
 
 }
