@@ -132,7 +132,7 @@ int main(int argc, char *argv[]) {
         }
 
         if (cnt > 50) {
-            printf("50\n");
+            printf("10000\n");
             break;
         }
 
