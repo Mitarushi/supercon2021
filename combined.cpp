@@ -63,14 +63,15 @@ void init_need_map() {
 }
 
 template<typename T>
-void line_print(std::vector<T> &args, T shift = 0) {
+std::string line_print(std::vector<T> &args) {
+    std::string output;
     for (int i = 0; i < args.size(); i++) {
         if (i) {
-            printf(" ");
+            output += ' ';
         }
-        printf("%d", args[i] + shift);
+        output += std::to_string("%d", args[i] + 1);
     }
-    printf("\n");
+    return output;
 }
 
 void read_graph() {
@@ -369,6 +370,7 @@ hash_t vector_hash(std::vector<int> &use) {
     return s;
 }
 
+
 void first_greedy() {
     std::vector<int> use;
     board_bit visited;
@@ -389,9 +391,7 @@ void first_greedy() {
         }
     }
 
-    printf("YES\n");
-    printf("%d\n", cnt);
-    line_print(use, 1);
+    printf("YES\n%d\n%s\n",cnt, line_print(use).c_str());
 }
 
 double get_elapsed_time(struct timeval *begin, struct timeval *end) {
@@ -481,9 +481,7 @@ int main() {
 //        fflush(stdout);
 
         if (*max_element == need_count) {
-            printf("YES\n");
-            printf("%d\n", cnt);
-            line_print(next_beam_use[max_element - next_beam_count.begin()], 1);
+            printf("YES\n%d\n%s\n",cnt, line_print(next_beam_use[max_element - next_beam_count.begin()]).c_str());
             fflush(stdout);
             break;
         }
