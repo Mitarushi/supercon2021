@@ -69,7 +69,7 @@ std::string line_print(std::vector<T> &args) {
         if (i) {
             output += ' ';
         }
-        output += std::to_string("%d", args[i] + 1);
+        output += std::to_string(args[i] + 1);
     }
     return output;
 }
